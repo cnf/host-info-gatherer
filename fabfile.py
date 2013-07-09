@@ -254,6 +254,17 @@ def cron():
         get('/var/spool/cron/*', "output/{}/cron".format(hostname))
 
 
+def sysstat():
+    """sysstat log files"""
+    if files.exists('/var/log/sa'):
+        hostname = env.hosts[env.host_string]
+        _host_dir()
+        if not os.path.isdir("output/{}/sysstat".format(hostname)):
+            os.mkdir("output/{}/sysstat".format(hostname))
+            with settings(warn_only=True):
+                get('/var/log/sa/*', "output/{}/sysstat".format(hostname))
+
+
 # @task(default=True)
 def info():
     """everything"""
@@ -281,6 +292,7 @@ def info():
     lvm()
     iptables()
     cron()
+    sysstat()
     print('all done')
 
 
