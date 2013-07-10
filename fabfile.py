@@ -279,7 +279,7 @@ def sysstat():
         _host_dir()
         if not os.path.isdir("output/{}/sysstat".format(hostname)):
             os.mkdir("output/{}/sysstat".format(hostname))
-            with settings(warn_only=True), hide('output', 'warnings'):
+            with settings(warn_only=True), hide('output', 'warnings', 'running'):
                 get('/var/log/sa/*', "output/{}/sysstat".format(hostname))
 
 
