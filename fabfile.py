@@ -201,9 +201,8 @@ def dmesg():
 
 def dmidecode():
     """dmidecode"""
-    with settings(warn_only=True):
-        with hide('output'):
-            dmi = run('dmidecode')
+    with settings(warn_only=True), hide('output'):
+        dmi = run('dmidecode')
     _write_file('dmidecode', dmi)
 
 
@@ -216,9 +215,8 @@ def lsmod():
 
 def lspci():
     """lspci"""
-    with settings(warn_only=True):
-        with hide('output'):
-            pci = run('lspci')
+    with settings(warn_only=True), hide('output'):
+        pci = run('lspci')
     _write_file('lspci', pci)
 
 
@@ -257,8 +255,7 @@ def lvm():
 
 def iptables():
     """iptables-save"""
-    with settings(warn_only=True):
-        with hide('output'):
+    with settings(warn_only=True), hide('output'):
             tables = run('iptables-save')
     _write_file('iptables-save', tables)
 
@@ -269,8 +266,9 @@ def cron():
     _host_dir()
     if not os.path.isdir("output/{}/cron".format(hostname)):
         os.mkdir("output/{}/cron".format(hostname))
-    get('/etc/cron*', "output/{}/cron".format(hostname))
-    with settings(warn_only=True):
+    with settings(warn_only=True), hide('output', 'warnings', 'running'):
+        get('/etc/cron*', "output/{}/cron".format(hostname))
+    with settings(warn_only=True), hide('output', 'warnings', 'running'):
         get('/var/spool/cron/*', "output/{}/cron".format(hostname))
 
 
@@ -281,14 +279,15 @@ def sysstat():
         _host_dir()
         if not os.path.isdir("output/{}/sysstat".format(hostname)):
             os.mkdir("output/{}/sysstat".format(hostname))
-            with settings(warn_only=True):
+            with settings(warn_only=True), hide('output', 'warnings'):
                 get('/var/log/sa/*', "output/{}/sysstat".format(hostname))
 
 
 def user_list():
     """getent passwd"""
-    ulist = run('getent passwd')
-    glist = run('getent group')
+    with hide('output'):
+        ulist = run('getent passwd')
+        glist = run('getent group')
     _write_file('userlist', ulist)
     _write_file('grouplist', glist)
 
