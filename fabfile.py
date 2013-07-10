@@ -201,8 +201,9 @@ def dmesg():
 
 def dmidecode():
     """dmidecode"""
-    with hide('output'):
-        dmi = run('dmidecode')
+    with settings(warn_only=True):
+        with hide('output'):
+            dmi = run('dmidecode')
     _write_file('dmidecode', dmi)
 
 
@@ -215,8 +216,9 @@ def lsmod():
 
 def lspci():
     """lspci"""
-    with hide('output'):
-        pci = run('lspci')
+    with settings(warn_only=True):
+        with hide('output'):
+            pci = run('lspci')
     _write_file('lspci', pci)
 
 
@@ -244,18 +246,20 @@ def delldisk():
 
 def lvm():
     """lvscan and pvscan"""
-    with hide('output'):
-        lvs = run('lvscan')
-    _write_file('lvscan', lvs)
-    with hide('output'):
-        pvs = run('pvscan')
-    _write_file('pvscan', pvs)
+    with settings(warn_only=True):
+        with hide('output'):
+            lvs = run('lvscan')
+        _write_file('lvscan', lvs)
+        with hide('output'):
+            pvs = run('pvscan')
+        _write_file('pvscan', pvs)
 
 
 def iptables():
     """iptables-save"""
-    with hide('output'):
-        tables = run('iptables-save')
+    with settings(warn_only=True):
+        with hide('output'):
+            tables = run('iptables-save')
     _write_file('iptables-save', tables)
 
 
