@@ -95,6 +95,7 @@ def release():
         with hide('output'):
             rel = run('cat /etc/debian_version')
     else:
+        rel = "unknown distribution"
         print('{}: unknown distribution'.format(env.hosts[env.host_string]))
     _write_file('release', rel)
 
@@ -137,15 +138,30 @@ def netstat():
 def chkconfig():
     """chkconfig --list|grep on"""
     with hide('output'):
-        chkconf = run('chkconfig --list|grep on')
-    _write_file('chkconfig', chkconf)
+        if files.exists('/sbin/chkconfig'):
+            chkconf = run('chkconfig --list|grep on')
+            _write_file('chkconfig', chkconf)
+        elif files.exists('/sbin/initctl'):
+            chkconf = run('initctl list')
+            _write_file('initctl_list', chkconf)
+        elif files.exists('sysv-rc-conf'):
+            chkconf = run('/usr/sbin/sysv-rc-conf --list')
+            _write_file('sysv-rc-conf_list', chkconf)
+        else:
+            chkconf = run('ls /etc/rc*.d/')
+            _write_file('', chkconf)
 
 
-def rpm_qa():
-    """rpm -qa"""
-    with hide('output'):
-        rpm = run('rpm -qa')
-    _write_file('rpm-qa', rpm)
+def packages():
+    """rpm -qa or dpkg -l"""
+    if files.exists('/bin/rpm'):
+        with hide('output'):
+            pkgs = run('rpm -qa')
+            _write_file('rpm-qa', pkgs)
+    elif files.exists('/usr/bin/dpkg'):
+        with hide('output'):
+            pkgs = run('dpkg -l')
+            _write_file('dpkg-l', pkgs)
 
 
 def ps_aux():
@@ -265,6 +281,14 @@ def sysstat():
                 get('/var/log/sa/*', "output/{}/sysstat".format(hostname))
 
 
+def user_list():
+    """getent passwd"""
+    ulist = run('getent passwd')
+    glist = run('getent group')
+    _write_file('userlist', ulist)
+    _write_file('grouplist', glist)
+
+
 # @task(default=True)
 def info():
     """everything"""
@@ -277,7 +301,7 @@ def info():
     ip_route()
     ip_rule()
     chkconfig()
-    rpm_qa()
+    packages()
     ps_aux()
     free()
     cpuinfo()
@@ -293,6 +317,7 @@ def info():
     iptables()
     cron()
     sysstat()
+    user_list()
     print('all done')
 
 
