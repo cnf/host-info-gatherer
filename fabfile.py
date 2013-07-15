@@ -60,6 +60,10 @@ def username(username):
 
 @runs_once
 def passwd():
+    """
+    force the use of password prompt
+    unsets everything ssh agent / keys related
+    """
     env.no_agent = True
     env.no_keys = True
 
@@ -133,6 +137,16 @@ def netstat():
     with hide('output'):
         na = run('netstat -neltup')
     _write_file('netstat-nltup', na)
+
+
+def ss():
+    """ss; ss -s"""
+    with hide('output'):
+        sss = run('ss -s')
+    _write_file('ss-s', sss)
+    with hide('output'):
+        ssp = run('ss')
+    _write_file('ss', ssp)
 
 
 def chkconfig():
@@ -227,6 +241,13 @@ def df():
     _write_file('df-H', disk)
 
 
+def mount():
+    """mount"""
+    with hide('output'):
+        mnt = run('mount')
+    _write_file('mount', mnt)
+
+
 def fstab():
     """cat /etc/fstab"""
     with hide('output'):
@@ -244,6 +265,7 @@ def delldisk():
 
 def lvm():
     """lvscan and pvscan"""
+    # TODO: vgs, pvs, lvs
     with settings(warn_only=True):
         with hide('output'):
             lvs = run('lvscan')
@@ -287,9 +309,50 @@ def user_list():
     """getent passwd"""
     with hide('output'):
         ulist = run('getent passwd')
-        glist = run('getent group')
     _write_file('userlist', ulist)
+    with hide('output'):
+        glist = run('getent group')
     _write_file('grouplist', glist)
+
+
+def netlink():
+    """mii-tool or ethtool"""
+    """dmesg | grep -i duplex fallback?"""
+    pass
+
+
+def last():
+    """w;last"""
+    with hide('output'):
+        lst = run('last')
+    _write_file('last', lst)
+    with hide('output'):
+        who = run('w')
+    _write_file('w', who)
+
+
+def history():
+    """history"""
+    with hide('output'):
+        lst = run('last')
+    _write_file('last', lst)
+
+
+def htop():
+    """htop"""
+    pass
+
+
+def sysctl():
+    """sysctl -a"""
+    with hide('output'):
+        sctl = run('sysctl -a')
+    _write_file('sysctl', sctl)
+
+
+def logs():
+    """/var/log..."""
+    pass
 
 
 # @task(default=True)
@@ -300,6 +363,7 @@ def info():
     release()
     uname()
     ip_a()
+    netlink()
     netstat()
     ip_route()
     ip_rule()
@@ -314,14 +378,50 @@ def info():
     lsmod()
     lspci()
     df()
+    mount()
     fstab()
     delldisk()
     lvm()
     iptables()
     cron()
     sysstat()
+    sysctl()
     user_list()
+    ss()
     print('all done')
+
+
+def debug():
+    """server debug"""
+    """
+    http://devo.ps/blog/2013/03/06/troubleshooting-5minutes-on-a-yet-unknown-box.html
+    """
+    # TODO: FS read actions last
+    last()
+    history()
+    ps_aux()
+    netstat()
+    free()
+    uptime()
+    htop()
+    lspci()
+    dmidecode()
+    netlink()
+    # iostat -kx 1 1
+    # vmstat 2 10
+    # mpstat 2 10
+    # dstat --top-io --top-bio
+    mount()
+    fstab()
+    df()
+    # lsof +D / ????
+    sysctl()
+    # cat /proc/interrupts
+    # cat /proc/net/ip_conntrack
+    ss()
+    dmesg()
+    logs()
+    cron()
 
 
 def ping():
