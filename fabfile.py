@@ -301,7 +301,7 @@ def sysstat():
         _host_dir()
         if not os.path.isdir("output/{}/sysstat".format(hostname)):
             os.mkdir("output/{}/sysstat".format(hostname))
-            with settings(warn_only=True), hide('output', 'warnings', 'running'):
+            with settings(warn_only=True), hide('warnings', 'running'):
                 get('/var/log/sa/*', "output/{}/sysstat".format(hostname))
 
 
@@ -352,7 +352,18 @@ def sysctl():
 
 def logs():
     """/var/log..."""
-    pass
+    if files.exists('/var/log'):
+        hostname = env.hosts[env.host_string]
+        _host_dir()
+        if not os.path.isdir("output/{}/logs".format(hostname)):
+            os.mkdir("output/{}/logs".format(hostname))
+    loglist = ['messages', 'auth.log', 'libvirt/libvirtd.log',
+               'logstash/logstash-indexer.log']
+    for log in loglist:
+        if files.exists('/var/log/{}'.format(log)):
+            with settings(warn_only=True), hide('warnings', 'running'):
+                get('/var/log/{}'.format(log),
+                    "output/{}/logs/{}".format(hostname, log))
 
 
 # @task(default=True)
@@ -407,6 +418,7 @@ def debug():
     lspci()
     dmidecode()
     netlink()
+    # cat /etc/apt/sources.list
     # iostat -kx 1 1
     # vmstat 2 10
     # mpstat 2 10
@@ -420,8 +432,8 @@ def debug():
     # cat /proc/net/ip_conntrack
     ss()
     dmesg()
-    logs()
     cron()
+    logs()
 
 
 def ping():
