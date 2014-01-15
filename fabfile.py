@@ -3,6 +3,7 @@
 """
 Gather host information
 fab host:127.0.0.1,localhost password info
+fab host:127.0.0.1,localhost username:demo debug
 fab hostlist:list.csv dmesg
 """
 
