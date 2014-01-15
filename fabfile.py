@@ -347,6 +347,13 @@ def history():
         lst = run('last')
     _write_file('last', lst)
 
+def hostname():
+    """hostname"""
+    with settings(warn_only=True), hide('output'):
+        realname = run('hostname')
+        realfqdn = run('hostname -f')
+    realhostname = "hostname: "+realname+"\nhostname -f: "+realfqdn+"\n"
+    _write_file('hostname', realhostname)
 
 def htop():
     """htop"""
@@ -381,6 +388,7 @@ def info():
     """everything"""
     print(env.hosts[env.host_string])
     date()
+    hostname()
     release()
     uname()
     ip_a()
