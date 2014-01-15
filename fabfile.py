@@ -118,7 +118,7 @@ def ip_a():
     """ip a"""
     with hide('output'):
         with settings(warn_only=True):
-            ipa = run('ipa a')
+            ipa = run('ip a')
         if ipa.succeeded:
             _write_file('ip_a', ipa)
         else:
