@@ -131,7 +131,8 @@ def ip_route():
 def ip_rule():
     """ip rule show"""
     with hide('output'):
-        rule = run('ip rule show')
+        with settings(warn_only=True):
+            rule = run('ip rule show')
     _write_file('ip_rule_show', rule)
 
 
