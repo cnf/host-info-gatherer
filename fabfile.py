@@ -117,15 +117,27 @@ def uname():
 def ip_a():
     """ip a"""
     with hide('output'):
-        ipa = run('ip a')
-    _write_file('ip_a', ipa)
+        with settings(warn_only=True):
+            ipa = run('ipa a')
+        if ipa.succeeded:
+            _write_file('ip_a', ipa)
+        else:
+            with settings(warn_only=True):
+                ipa = run('ifconfig')
+            _write_file('ifconfig', ipa)
 
 
 def ip_route():
     """ip route show table all"""
     with hide('output'):
-        route = run('ip route show table all')
-    _write_file('ip_route_show_table_all', route)
+        with settings(warn_only=True):
+            route = run('ip route show table all')
+        if route.succeeded:
+            _write_file('ip_route_show_table_all', route)
+        else:
+            with settings(warn_only=True):
+                route = run('netstat -nr')
+            _write_file('netstat -nr', route)
 
 
 def ip_rule():
