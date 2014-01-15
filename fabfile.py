@@ -258,6 +258,12 @@ def fstab():
         disk = run('cat /etc/fstab')
     _write_file('fstab', disk)
 
+def mdstat():
+    """cat /proc/mdstat"""
+    if files.exists('/proc/mdstat'):
+        with hide('output'):
+            mdstat = run('cat /proc/mdstat')
+        _write_file('mdstat', mdstat)
 
 def delldisk():
     """omreport storage vdisk"""
@@ -403,6 +409,7 @@ def info():
     sysctl()
     user_list()
     ss()
+    mdstat()
     print('all done')
 
 
