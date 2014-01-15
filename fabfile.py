@@ -91,13 +91,16 @@ def date():
 
 
 def release():
-    """output of /etc/{redhat-release,debian_version}"""
+    """output of /etc/{redhat-release,debian_version,slackware-version}"""
     if files.exists('/etc/redhat-release'):
         with hide('output'):
             rel = run('cat /etc/redhat-release')
     elif files.exists('/etc/debian_version'):
         with hide('output'):
             rel = run('cat /etc/debian_version')
+    elif files.exists('/etc/slackware-version'):
+        with hide('output'):
+            rel = run('cat /etc/slackware-version')
     else:
         rel = "unknown distribution"
         print('{}: unknown distribution'.format(env.hosts[env.host_string]))
