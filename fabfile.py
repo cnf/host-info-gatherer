@@ -91,13 +91,16 @@ def date():
 
 
 def release():
-    """output of /etc/{redhat-release,debian_version}"""
+    """output of /etc/{redhat-release,debian_version,slackware-version}"""
     if files.exists('/etc/redhat-release'):
         with hide('output'):
             rel = run('cat /etc/redhat-release')
     elif files.exists('/etc/debian_version'):
         with hide('output'):
             rel = run('cat /etc/debian_version')
+    elif files.exists('/etc/slackware-version'):
+        with hide('output'):
+            rel = run('cat /etc/slackware-version')
     else:
         rel = "unknown distribution"
         print('{}: unknown distribution'.format(env.hosts[env.host_string]))
@@ -128,7 +131,8 @@ def ip_route():
 def ip_rule():
     """ip rule show"""
     with hide('output'):
-        rule = run('ip rule show')
+        with settings(warn_only=True):
+            rule = run('ip rule show')
     _write_file('ip_rule_show', rule)
 
 
@@ -254,6 +258,12 @@ def fstab():
         disk = run('cat /etc/fstab')
     _write_file('fstab', disk)
 
+def mdstat():
+    """cat /proc/mdstat"""
+    if files.exists('/proc/mdstat'):
+        with hide('output'):
+            mdstat = run('cat /proc/mdstat')
+        _write_file('mdstat', mdstat)
 
 def delldisk():
     """omreport storage vdisk"""
@@ -337,6 +347,13 @@ def history():
         lst = run('last')
     _write_file('last', lst)
 
+def hostname():
+    """hostname"""
+    with settings(warn_only=True), hide('output'):
+        realname = run('hostname')
+        realfqdn = run('hostname -f')
+    realhostname = "hostname: "+realname+"\nhostname -f: "+realfqdn+"\n"
+    _write_file('hostname', realhostname)
 
 def htop():
     """htop"""
@@ -371,6 +388,7 @@ def info():
     """everything"""
     print(env.hosts[env.host_string])
     date()
+    hostname()
     release()
     uname()
     ip_a()
@@ -399,6 +417,7 @@ def info():
     sysctl()
     user_list()
     ss()
+    mdstat()
     print('all done')
 
 
