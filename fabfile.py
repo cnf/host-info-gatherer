@@ -14,7 +14,7 @@ __license__ = "ISC"
 __maintainer__ = "Frank Rosquin"
 __email__ = "frank@rosquin.net"
 
-from fabric.api import env, settings, hide, run, get, runs_once
+from fabric.api import env, settings, hide, run, sudo, get, runs_once
 from fabric.contrib import files
 
 import os
@@ -93,6 +93,7 @@ def date():
 
 def release():
     """output of /etc/{redhat-release,debian_version,slackware-version}"""
+    # lsb-release?
     if files.exists('/etc/redhat-release'):
         with hide('output'):
             rel = run('cat /etc/redhat-release')
@@ -233,7 +234,7 @@ def dmesg():
 def dmidecode():
     """dmidecode"""
     with settings(warn_only=True), hide('output'):
-        dmi = run('dmidecode')
+        dmi = sudo('dmidecode')
     _write_file('dmidecode', dmi)
 
 
@@ -271,12 +272,14 @@ def fstab():
         disk = run('cat /etc/fstab')
     _write_file('fstab', disk)
 
+
 def mdstat():
     """cat /proc/mdstat"""
     if files.exists('/proc/mdstat'):
         with hide('output'):
             mdstat = run('cat /proc/mdstat')
         _write_file('mdstat', mdstat)
+
 
 def delldisk():
     """omreport storage vdisk"""
@@ -291,11 +294,43 @@ def lvm():
     # TODO: vgs, pvs, lvs
     with settings(warn_only=True):
         with hide('output'):
-            lvs = run('lvscan')
+            lvs = sudo('lvscan')
         _write_file('lvscan', lvs)
         with hide('output'):
-            pvs = run('pvscan')
+            pvs = sudo('pvscan')
         _write_file('pvscan', pvs)
+
+
+def iostat():
+    """iostat -kx 2"""
+    with settings(warn_only=True):
+        with hide('output'):
+            iostat = run('iostat -kx 2')
+        _write_file('iostat', iostat)
+
+
+def vmstat():
+    """vmstat"""
+    with settings(warn_only=True):
+        with hide('output'):
+            vmstat = run('vmstat')
+        _write_file('vmstat', vmstat)
+
+
+def mpstat():
+    """mpstat"""
+    with settings(warn_only=True):
+        with hide('output'):
+            mpstat = run('mpstat')
+        _write_file('mpstat', mpstat)
+
+
+def dstat():
+    """dstat --top-io --top-bio"""
+    with settings(warn_only=True):
+        with hide('output'):
+            dstat = run('dstat --top-io --top-bio')
+        _write_file('dstat', dstat)
 
 
 def iptables():
@@ -303,6 +338,17 @@ def iptables():
     with settings(warn_only=True), hide('output'):
             tables = run('iptables-save')
     _write_file('iptables-save', tables)
+
+
+def conntrack():
+    """ip_conntrack or nf_conntrack"""
+    with hide('output'):
+        if files.exists('/proc/net/nf_conntrack'):
+            conntrack = run('cat /proc/net/nf_conntrack')
+            _write_file('conntrack', conntrack)
+        elif files.exists('/proc/net/ip_conntrack'):
+            conntrack = run('cat /proc/net/ip_conntrack')
+            _write_file('conntrack', conntrack)
 
 
 def cron():
@@ -340,8 +386,14 @@ def user_list():
 
 def netlink():
     """mii-tool or ethtool"""
-    """dmesg | grep -i duplex fallback?"""
-    pass
+    # TODO: dmesg | grep -i duplex fallback?
+    with hide('output'):
+        with settings(warn_only=True):
+            mii = sudo('mii-tool')
+        _write_file('mii-tool', mii)
+        with settings(warn_only=True):
+            ethtool = sudo('ethtool')
+        _write_file('ethtool', ethtool)
 
 
 def last():
@@ -360,6 +412,7 @@ def history():
         lst = run('last')
     _write_file('last', lst)
 
+
 def hostname():
     """hostname"""
     with settings(warn_only=True), hide('output'):
@@ -368,8 +421,10 @@ def hostname():
     realhostname = "hostname: "+realname+"\nhostname -f: "+realfqdn+"\n"
     _write_file('hostname', realhostname)
 
+
 def htop():
     """htop"""
+    # TODO: ...
     pass
 
 
@@ -380,6 +435,22 @@ def sysctl():
     _write_file('sysctl', sctl)
 
 
+def procinterrupts():
+    if files.exists('/proc/interrupts'):
+        with hide('output'):
+            intr = run('cat /proc/interrupts')
+        _write_file('proc_interrupts', intr)
+
+
+def apt():
+    """ apt-sources and packages"""
+    if files.exists('/etc/apt'):
+        hostname = env.hosts[env.host_string]
+        with hide('output'):
+            get('/etc/apt', "output/{}/".format(hostname))
+    pass
+
+
 def logs():
     """/var/log..."""
     if files.exists('/var/log'):
@@ -387,8 +458,8 @@ def logs():
         _host_dir()
         if not os.path.isdir("output/{}/logs".format(hostname)):
             os.mkdir("output/{}/logs".format(hostname))
-    loglist = ['messages', 'auth.log', 'libvirt/libvirtd.log',
-               'logstash/logstash-indexer.log']
+    loglist = ['messages', 'syslog', 'auth', 'auth.log', 'secure',
+               'libvirt/libvirtd.log', 'logstash/logstash-indexer.log']
     for log in loglist:
         if files.exists('/var/log/{}'.format(log)):
             with settings(warn_only=True), hide('warnings', 'running'):
@@ -400,22 +471,35 @@ def logs():
 def info():
     """everything"""
     print(env.hosts[env.host_string])
+    # system info
     date()
     hostname()
     release()
+    last()
     uname()
+    history()
+    ps_aux()
+
+    # network
     ip_a()
     netlink()
     netstat()
     ip_route()
     ip_rule()
+    iptables()
+    ss()
+
     chkconfig()
     packages()
-    ps_aux()
+    apt()
+
     free()
     cpuinfo()
     uptime()
+    htop()
     dmesg()
+
+    # hardware
     dmidecode()
     lsmod()
     lspci()
@@ -424,13 +508,21 @@ def info():
     fstab()
     delldisk()
     lvm()
-    iptables()
+    df()
+    mdstat()
+
+    # IO
+    iostat()
+    vmstat()
+    mpstat()
+    dstat()
+
     cron()
     sysstat()
     sysctl()
+    procinterrupts()
     user_list()
-    ss()
-    mdstat()
+    logs()
     print('all done')
 
 
@@ -443,26 +535,40 @@ def debug():
     last()
     history()
     ps_aux()
-    netstat()
+
     free()
     uptime()
     htop()
+
     lspci()
     dmidecode()
     netlink()
-    # cat /etc/apt/sources.list
-    # iostat -kx 1 1
-    # vmstat 2 10
-    # mpstat 2 10
-    # dstat --top-io --top-bio
+
+    # IO
+    iostat()
+    vmstat()
+    mpstat()
+    dstat()
+
+    # disks and FS
     mount()
     fstab()
     df()
+    lvm()
     # lsof +D / ????
+
     sysctl()
-    # cat /proc/interrupts
-    # cat /proc/net/ip_conntrack
+    procinterrupts()
+
+    # network
+    conntrack()
+    iptables()
+    netstat()
     ss()
+
+    apt()
+
+    # logs etc
     dmesg()
     cron()
     logs()
